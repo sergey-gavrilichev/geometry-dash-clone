@@ -1,3 +1,4 @@
+import sys
 import pygame
 import level_selector
 
@@ -9,11 +10,6 @@ def main():
     pygame.init()
     pygame.display.set_caption('Geometry Dash Clone')
     screen = pygame.display.set_mode(SCREEN_SIZE)
-
-    # загрузка и воспроизведение музыки
-    pygame.mixer.init()
-    pygame.mixer.music.load('assets//gd_menu_music.mp3')
-    pygame.mixer.music.play(-1)
 
     # загрузка заднего фона
     background_image = pygame.image.load('assets//gd_menu_background.png')
@@ -35,6 +31,7 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+                sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 # открытие меню выбора уровня если нажата кнопка
                 condition_1 = event.pos[0] in play_button_borders_x
@@ -53,4 +50,9 @@ def main():
 
 
 if __name__ == '__main__':
+    # загрузка и воспроизведение музыки. переместил, чтобы не начиналось с начала
+    pygame.mixer.init()
+    pygame.mixer.music.load('assets//gd_menu_music.mp3')
+    pygame.mixer.music.play(-1)
+
     main()
