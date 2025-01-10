@@ -10,11 +10,6 @@ def main():
     pygame.display.set_caption('Geometry Dash Clone')
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
-    # загрузка и воспроизведение музыки
-    pygame.mixer.init()
-    pygame.mixer.music.load('assets//gd_menu_music.mp3')
-    pygame.mixer.music.play(-1)
-
     # загрузка заднего фона
     background_image = pygame.image.load('assets//gd_menu_background.png')
     background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
@@ -53,4 +48,10 @@ def main():
 
 
 if __name__ == '__main__':
+    # загрузка и воспроизведение музыки
+    pygame.mixer.init()
+    pygame.mixer.music.load('assets//gd_menu_music.mp3')
+    pygame.mixer.music.play(-1)
+
+    # основной код
     main()
