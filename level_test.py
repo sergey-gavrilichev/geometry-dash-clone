@@ -6,6 +6,13 @@ import level_selector
 from menu import SCREEN_SIZE
 
 
+def level_exit():
+    # выход из уровня после нажатия Esc
+    pygame.mixer.music.load('assets//gd_menu_music.mp3')
+    pygame.mixer.music.play(-1)
+    level_selector.main()
+
+
 def cube_crashed(screen):
     # останавливаем музыку
     pygame.mixer.music.stop()
@@ -22,7 +29,6 @@ def cube_crashed(screen):
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
                 pygame.quit()
                 sys.exit()
             # новая попытка
@@ -31,10 +37,7 @@ def cube_crashed(screen):
                 main()
             # выход из уровня + возвращаем музыку из главного меню
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                running = False
-                pygame.mixer.music.load('assets//gd_menu_music.mp3')
-                pygame.mixer.music.play(-1)
-                level_selector.main()
+                level_exit()
 
 
 def main():
@@ -69,8 +72,9 @@ def main():
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
                 sys.exit()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                level_exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and not falling:
                 jumping = True
             elif event.type == spawn_event:
