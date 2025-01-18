@@ -18,7 +18,7 @@ def main(screen):
     font = pygame.font.Font(None, 50)
     text1 = font.render("Как играть?", True, (100, 255, 100))
     text2 = font.render("Для прыжка нажимайте", True, (100, 255, 100))
-    text3 = font.render("правую кнопку мыши. Для", True, (100, 255, 100))
+    text3 = font.render("левую кнопку мыши. Для", True, (100, 255, 100))
     text4 = font.render("выхода из уровня - Esc.", True, (100, 255, 100))
     text5 = font.render("Удачи!", True, (100, 255, 100))
     screen.blit(text1, (550, 230))
