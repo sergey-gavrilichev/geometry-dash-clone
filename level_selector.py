@@ -1,3 +1,4 @@
+import os
 import sys
 import pygame
 import menu
@@ -8,45 +9,137 @@ import level_test
 from menu import SCREEN_SIZE, WIDTH, HEIGHT
 
 
+all_sprites = pygame.sprite.Group()
+ok_button_group = pygame.sprite.Group()
+go_to_left_dict = {1: 3, 2: 1, 3: 2}
+go_to_right_dict = {1: 2, 2: 3, 3: 1}
+current_level = 1
+
+do_show_info = False
+
+
+# спрайт кнопки назад
+class BackButton(pygame.sprite.Sprite):
+    back_button_image = pygame.image.load(os.path.join('assets', 'gd_button_back.png'))
+    back_button_image = pygame.transform.scale(back_button_image, (WIDTH * 0.08, HEIGHT * 0.15))
+
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = BackButton.back_button_image
+        self.rect = self.image.get_rect()
+        self.rect.x = 25
+        self.rect.y = 25
+
+    def update(self, *args):
+        # возврат в главное меню, если нажата кнопка
+        if args and self.rect.collidepoint(args[0].pos):
+            menu.main()
+
+
+# спрайт кнопки информация
+class InfoButton(pygame.sprite.Sprite):
+    info_button_image = pygame.image.load(os.path.join('assets', 'gd_button_info.png'))
+    info_button_image = pygame.transform.scale(info_button_image, (WIDTH * 0.08, HEIGHT * 0.15))
+
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = InfoButton.info_button_image
+        self.rect = self.image.get_rect()
+        self.rect.x = 1150
+        self.rect.y = 25
+
+    def update(self, *args):
+        # открытие окна информации, если нажата кнопка
+        if args and self.rect.collidepoint(args[0].pos):
+            global do_show_info
+            do_show_info = True
+
+
+# спрайт кнопки пролистывания влево
+class LeftButton(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = pygame.Surface((40, 100), pygame.SRCALPHA, 32)
+        pygame.draw.polygon(self.image, pygame.Color('White'), ((0, 50), (40, 0), (40, 100)))
+        self.rect = self.image.get_rect()
+        self.rect.x = 20
+        self.rect.y = 325
+
+    def update(self, *args):
+        # пролистывание влево, если нажата кнопка
+        if args and self.rect.collidepoint(args[0].pos):
+            global current_level
+            current_level = go_to_left_dict.get(current_level)
+
+
+# спрайт кнопки пролистывания вправо
+class RightButton(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = pygame.Surface((40, 100), pygame.SRCALPHA, 32)
+        pygame.draw.polygon(self.image, pygame.Color('White'), ((40, 50), (0, 0), (0, 100)))
+        self.rect = self.image.get_rect()
+        self.rect.x = 1220
+        self.rect.y = 325
+
+    def update(self, *args):
+        # пролистывание вправо, если нажата кнопка
+        if args and self.rect.collidepoint(args[0].pos):
+            global current_level
+            current_level = go_to_right_dict.get(current_level)
+
+# спрайт кнопки начала уровня
+class StartButton(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = pygame.Surface((680, 250), pygame.SRCALPHA, 32)
+        pygame.draw.rect(self.image, pygame.Color('Grey'), (0, 0, 680, 250))
+        self.rect = self.image.get_rect()
+        self.rect.x = 300
+        self.rect.y = 175
+
+    def update(self, *args):
+        # стартуем уровень. пока он один - тестовый
+        if args and self.rect.collidepoint(args[0].pos):
+            level_test.main()
+
+
+# спрайт кнопки "ок"
+class OkButton(pygame.sprite.Sprite):
+    ok_button_image = pygame.image.load(os.path.join('assets', 'gd_button_ok.png'))
+    ok_button_image = pygame.transform.scale(ok_button_image, (130, 60))
+
+    def __init__(self):
+        super().__init__(ok_button_group)
+        self.image = OkButton.ok_button_image
+        self.rect = self.image.get_rect()
+        self.rect.x = 585
+        self.rect.y = 450
+
+    def update(self, *event):
+        if event and self.rect.collidepoint(event[0].pos):
+            global do_show_info
+            do_show_info = False
+
+
+# добавляем спрайты в группу
+all_sprites.add(BackButton())
+all_sprites.add(InfoButton())
+all_sprites.add(LeftButton())
+all_sprites.add(RightButton())
+all_sprites.add(StartButton())
+
+ok_button_group.add(OkButton())
+
+
 def main():
     pygame.init()
     pygame.display.set_caption('Geometry Dash Clone')
     screen = pygame.display.set_mode(SCREEN_SIZE)
-    flag_info = False
-
-    # переменные для перелистывания
-    go_to_left_dict = {1: 3, 2: 1, 3: 2}
-    go_to_right_dict = {1: 2, 2: 3, 3: 1}
-    current_level = 1
 
     # загрузка заднего фона
-    background_image = pygame.image.load('assets//gd_level_selector_background.png')
+    background_image = pygame.image.load(os.path.join('assets', 'gd_level_selector_background.png'))
     background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
-
-    # загрузка кнопки "назад"
-    back_button_image = pygame.image.load('assets//gd_button_back.png')
-    back_button_image = pygame.transform.scale(back_button_image, (WIDTH * 0.08, HEIGHT * 0.15))
-    back_button_borders_x = range(25, 128)
-    back_button_borders_y = range(25, 133)
-
-    # закгрузка кнопки "информация"
-    info_button_image = pygame.image.load('assets//gd_button_info.png')
-    info_button_image = pygame.transform.scale(info_button_image, (WIDTH * 0.08, HEIGHT * 0.15))
-    info_button_borders_x = range(1150, 1253)
-    info_button_borders_y = range(25, 133)
-
-    ok_button_borders_x = range(585, 715)
-    ok_button_borders_y = range(450, 510)
-
-    # кнопки влево и вправо для пролистывания уровней
-    left_button_borders_x = range(20, 60)
-    left_button_borders_y = range(325, 425)
-    right_button_borders_x = range(1220, 1260)
-    right_button_borders_y = range(325, 425)
-
-    # границы для кнопки старта
-    start_button_borders_x = range(300, 980)
-    start_button_borders_y = range(175, 425)
 
     # текст
     font = pygame.font.Font(None, 72)
@@ -62,41 +155,18 @@ def main():
                 running = False
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if not flag_info:
-                    # открытие главного меню, если нажата кнопка "назад"
-                    if event.pos[0] in back_button_borders_x and event.pos[1] in back_button_borders_y:
-                        menu.main()
-                        running = False
-                    # открытие окна информации, если нажата кнопка "информация"
-                    elif event.pos[0] in info_button_borders_x and event.pos[1] in info_button_borders_y:
-                        flag_info = True
-                    # пролистывание уровней
-                    elif event.pos[0] in left_button_borders_x and event.pos[1] in left_button_borders_y:
-                        current_level = go_to_left_dict.get(current_level)
-                    elif event.pos[0] in right_button_borders_x and event.pos[1] in right_button_borders_y:
-                        current_level = go_to_right_dict.get(current_level)
-                    # открытие уровня. пока что все открывают один и тот же тестовый уровень
-                    elif event.pos[0] in start_button_borders_x and event.pos[1] in start_button_borders_y:
-                        level_test.main()
-                        running = False
-                else:
-                    # закрытие окна информации, если нажата кнопка "ок"
-                    if event.pos[0] in ok_button_borders_x and event.pos[1] in ok_button_borders_y:
-                        flag_info = False
+                all_sprites.update(event, screen)
+                ok_button_group.update(event)
 
         # отображение
         screen.blit(background_image, (0, 0))
-        screen.blit(back_button_image, (25, 25))
-        screen.blit(info_button_image, (1150, 25))
+        all_sprites.draw(screen)
 
-        # рисуем стрелки влево и вправо
-        pygame.draw.polygon(screen, pygame.Color('White'),((20, 375), (60, 325), (60, 425)))
-        pygame.draw.polygon(screen, pygame.Color('White'),((1260, 375), (1220, 325), (1220, 425)))
-
-        # отображение поля с текущем уровнем
-        pygame.draw.rect(screen, pygame.Color('Grey'), (300, 175, 680, 250))
+        # в будущем - прогресс на уровне
         pygame.draw.rect(screen, pygame.Color('Grey'), (300, 450, 680, 50))
 
+        # отображение текущего уровня
+        global current_level
         if current_level == 1:
             screen.blit(text_level_1, (440, 225))
         elif current_level == 2:
@@ -104,9 +174,11 @@ def main():
         else:
             screen.blit(text_level_3, (440, 225))
 
-        # отображение окна информации
-        if flag_info:
+        # отображение информации, если нужно
+        global do_show_info
+        if do_show_info:
             info.main(screen)
+            ok_button_group.draw(screen)
 
         pygame.display.flip()
 

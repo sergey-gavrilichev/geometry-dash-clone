@@ -1,3 +1,4 @@
+import os
 import sys
 import pygame
 import level_selector
@@ -8,7 +9,7 @@ from menu import SCREEN_SIZE, WIDTH, HEIGHT
 
 def level_exit():
     # выход из уровня после нажатия Esc
-    pygame.mixer.music.load('assets//gd_menu_music.mp3')
+    pygame.mixer.music.load(os.path.join('assets', 'gd_menu_music.mp3'))
     pygame.mixer.music.play(-1)
     level_selector.main()
 
@@ -19,11 +20,11 @@ def cube_crashed(screen):
 
     # текст о смерти( в окне
     # загрузка заднего фона
-    info_background_image = pygame.image.load('assets//gd_info.png')
+    info_background_image = pygame.image.load(os.path.join('assets', 'gd_info.png'))
     info_background_image = pygame.transform.scale(info_background_image, (550, 350))
 
     # загрузка кнопки "ок"
-    ok_button_image = pygame.image.load('assets//gd_button_ok.png')
+    ok_button_image = pygame.image.load(os.path.join('assets', 'gd_button_ok.png'))
     ok_button_image = pygame.transform.scale(ok_button_image, (130, 60))
 
     # отображение окна информации
@@ -65,12 +66,12 @@ def main():
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
     # загрузка кубика
-    cube_image = pygame.image.load('assets//gd_level_test_cube.png')
+    cube_image = pygame.image.load(os.path.join('assets', 'gd_level_test_cube.png'))
     cube_image = pygame.transform.scale(cube_image, (70, 70))
 
     # музыка
     pygame.mixer.init()
-    pygame.mixer.music.load('assets//gd_level_test_music.mp3')
+    pygame.mixer.music.load(os.path.join('assets', 'gd_level_test_music.mp3'))
     pygame.mixer.music.play(-1)
 
     # спавн новых стенок и треугольников
