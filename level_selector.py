@@ -3,7 +3,7 @@ import sys
 import pygame
 import menu
 import info
-import level_test
+import level_test_new
 
 
 from menu import SCREEN_SIZE, WIDTH, HEIGHT
@@ -101,7 +101,7 @@ class StartButton(pygame.sprite.Sprite):
     def update(self, *args):
         # стартуем уровень. пока он один - тестовый
         if args and self.rect.collidepoint(args[0].pos):
-            level_test.main()
+            level_test_new.main()
 
 
 # спрайт кнопки "ок"
@@ -157,6 +157,8 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 all_sprites.update(event, screen)
                 ok_button_group.update(event)
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                menu.main()
 
         # отображение
         screen.blit(background_image, (0, 0))
