@@ -27,21 +27,52 @@ class Cube(pygame.sprite.Sprite):
         self.falling = False
 
     def update(self, *event):
-        if event and event[0].type == pygame.MOUSEBUTTONDOWN and not self.falling:
+        if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False:
             self.jumping = True
 
         # прыжок вверх
         if self.jumping:
-            self.rect.y -= 4
             if self.rect.y == 333:
                 self.jumping = False
                 self.falling = True
+            else:
+                self.rect.y -= 4
 
         # падение вниз
         if self.falling:
-            self.rect.y += 2
             if self.rect.y == 433:
                 self.falling = False
+            else:
+                self.rect.y += 2
+
+
+# спрайт блока
+class Block(pygame.sprite.Sprite):
+    block_image = pygame.image.load(os.path.join('assets', 'gd_level_test_block.png'))
+    block_image = pygame.transform.scale(block_image, (70, 70))
+
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = Block.block_image
+        self.rect = self.image.get_rect()
+        self.rect.x = 1280
+        self.rect.y = 433
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, *event):
+        # перемещение
+        self.rect.x -= 5
+        if self.rect.x <= -70:
+            self.kill()
+
+        # проверка на столкновение
+        if pygame.sprite.collide_mask(self, cube) == (65, 0):
+            cube.falling = True
+        elif pygame.sprite.collide_mask(self, cube):
+            if cube.rect.y <= 365:
+                cube.falling = False
+            else:
+                cube_crashed(screen)
 
 
 # спрайт шипа
@@ -74,10 +105,7 @@ cube = Cube()
 def main():
     pygame.init()
     pygame.display.set_caption('Geometry Dash Clone')
-
-    # добавляем спрайты в группу
     all_sprites = pygame.sprite.Group()
-    all_sprites.add(Spike())
     all_sprites.add(cube)
 
     # загрузка заднего фона
@@ -93,10 +121,16 @@ def main():
 
     # спавн шипов
     spawn_event = pygame.USEREVENT + 1
-    pygame.time.set_timer(spawn_event, 3000)
+    pygame.time.set_timer(spawn_event, 6000)
+    spawn_flag = 0
 
-    def spawn_spike():
-        all_sprites.add(Spike())
+    def spawn(spawn_flag):
+        if spawn_flag:
+            all_sprites.add(Spike())
+            return 0
+        else:
+            all_sprites.add(Block())
+            return 1
 
     # основной цикл
     running = True
@@ -108,7 +142,7 @@ def main():
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 all_sprites.update(event)
             elif event.type == spawn_event:
-                spawn_spike()
+                spawn_flag = spawn(spawn_flag)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 level_exit()
 
