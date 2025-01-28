@@ -23,18 +23,21 @@ class Cube(pygame.sprite.Sprite):
         self.rect.x = 200
         self.rect.y = 433
         self.mask = pygame.mask.from_surface(self.image)
+        self.jump = 0
         self.jumping = False
         self.falling = False
 
     def update(self, *event):
         if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False:
             self.jumping = True
+            self.jump = self.rect.y - 100
 
         # прыжок вверх
         if self.jumping:
-            if self.rect.y == 333:
+            if self.rect.y == self.jump:
                 self.jumping = False
                 self.falling = True
+                self.jump = 0
             else:
                 self.rect.y -= 4
 
@@ -43,7 +46,34 @@ class Cube(pygame.sprite.Sprite):
             if self.rect.y == 433:
                 self.falling = False
             else:
-                self.rect.y += 2
+                self.rect.y += 4
+
+
+# спрайт орба
+class Orb(pygame.sprite.Sprite):
+    orb_image = pygame.image.load(os.path.join('assets', 'gd_level_test_orb.png'))
+    orb_image = pygame.transform.scale(orb_image, (30, 30))
+
+    def __init__(self, x=None, y=None):
+        super().__init__(all_sprites)
+        self.image = Orb.orb_image
+        self.rect = self.image.get_rect()
+        self.rect.x = x or 1280
+        self.rect.y = y or 383
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, *event):
+        # перемещение
+        self.rect.x -= 5
+        if self.rect.x <= -30:
+            self.kill()
+
+        # проверка на столкновение
+        if pygame.sprite.collide_mask(self, cube):
+            cube.jump = 301
+            cube.jumping = True
+            cube.falling = False
+            self.kill()
 
 
 # спрайт блока
@@ -51,12 +81,12 @@ class Block(pygame.sprite.Sprite):
     block_image = pygame.image.load(os.path.join('assets', 'gd_level_test_block.png'))
     block_image = pygame.transform.scale(block_image, (70, 70))
 
-    def __init__(self):
+    def __init__(self, x=None, y=None):
         super().__init__(all_sprites)
         self.image = Block.block_image
         self.rect = self.image.get_rect()
-        self.rect.x = 1280
-        self.rect.y = 433
+        self.rect.x = x or 1280
+        self.rect.y = y or 433
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, *event):
@@ -80,12 +110,12 @@ class Spike(pygame.sprite.Sprite):
     spike_image = pygame.image.load(os.path.join('assets', 'gd_level_test_spike.png'))
     spike_image = pygame.transform.scale(spike_image, (70, 70))
 
-    def __init__(self):
+    def __init__(self, x=None, y=None):
         super().__init__(all_sprites)
         self.image = Spike.spike_image
         self.rect = self.image.get_rect()
-        self.rect.x = 1280
-        self.rect.y = 433
+        self.rect.x = x or 1280
+        self.rect.y = y or 433
         self.mask = pygame.mask.from_surface(self.image)
 
     def update(self, *event):
@@ -122,15 +152,29 @@ def main():
     # спавн шипов
     spawn_event = pygame.USEREVENT + 1
     pygame.time.set_timer(spawn_event, 6000)
-    spawn_flag = 0
+    spawn_flag = 2
 
     def spawn(spawn_flag):
-        if spawn_flag:
+        if spawn_flag == 0:
             all_sprites.add(Spike())
-            return 0
-        else:
-            all_sprites.add(Block())
+            all_sprites.add(Orb(1299))
             return 1
+        if spawn_flag == 1:
+            all_sprites.add(Spike())
+            return 2
+        elif spawn_flag == 2:
+            all_sprites.add(Block())
+            return 3
+        elif spawn_flag == 3:
+            block = Block(1260)
+            all_sprites.add(block)
+            block = Block(1320)
+            all_sprites.add(block)
+            block = Block(1390)
+            all_sprites.add(block)
+            spike = Spike(1390, 363)
+            all_sprites.add(spike)
+            return 0
 
     # основной цикл
     running = True
