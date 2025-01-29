@@ -149,32 +149,37 @@ def main():
     # ограничение кадров
     clock = pygame.time.Clock()
 
-    # спавн шипов
-    spawn_event = pygame.USEREVENT + 1
-    pygame.time.set_timer(spawn_event, 6000)
-    spawn_flag = 2
+    # генерация уровня
+    with open('level_test.txt', mode='r', encoding='utf8') as readed_file:
+        text = readed_file.read().split()[-1]
 
-    def spawn(spawn_flag):
-        if spawn_flag == 0:
-            all_sprites.add(Spike())
-            all_sprites.add(Orb(1299))
-            return 1
-        if spawn_flag == 1:
-            all_sprites.add(Spike())
-            return 2
-        elif spawn_flag == 2:
-            all_sprites.add(Block())
-            return 3
-        elif spawn_flag == 3:
-            block = Block(1260)
-            all_sprites.add(block)
-            block = Block(1320)
-            all_sprites.add(block)
-            block = Block(1390)
-            all_sprites.add(block)
-            spike = Spike(1390, 363)
-            all_sprites.add(spike)
-            return 0
+    x = 1280
+    y = 433
+    level_dict = {'E': None, 'B': Block, 'S': Spike, 'O': Orb}
+    flag = False
+    height = 1
+
+    for symbol in text:
+        # если символ - число, то поднимаем следующий объект
+        try:
+            symbol = int(symbol)
+            y = 433 - 70 * (symbol - 1)
+            flag = True
+            height = symbol
+            continue
+        except ValueError:
+            # иначе, спавним объект
+            object = level_dict.get(symbol)
+            if object:
+                all_sprites.add(object(x, y))
+                if flag:
+                    y += 70
+                    height -= 1
+                    if height == 1:
+                        flag = False
+                    continue
+            x += 70
+            y = 433
 
     # основной цикл
     running = True
@@ -185,8 +190,6 @@ def main():
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 all_sprites.update(event)
-            elif event.type == spawn_event:
-                spawn_flag = spawn(spawn_flag)
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 level_exit()
 
@@ -200,6 +203,10 @@ def main():
 
         # ограничение кадров
         clock.tick(60)
+
+        # если остался только куб - то уровень закончился и это победа
+        if len(all_sprites) == 1:
+            level_completed(screen)
 
 
 # выход в меню выбора уровня
@@ -231,6 +238,53 @@ def cube_crashed(level_screen):
     # отображение текста
     font = pygame.font.Font(None, 50)
     text1 = font.render("Вы разбились.", True, (100, 255, 100))
+    text2 = font.render("Для новой игры нажмите", True, (100, 255, 100))
+    text3 = font.render("левую кнопку мыши. Для", True, (100, 255, 100))
+    text4 = font.render("выхода из уровня - Esc.", True, (100, 255, 100))
+    text5 = font.render("Удачи!", True, (100, 255, 100))
+    level_screen.blit(text1, (530, 230))
+    level_screen.blit(text2, (420, 270))
+    level_screen.blit(text3, (420, 310))
+    level_screen.blit(text4, (420, 350))
+    level_screen.blit(text5, (585, 390))
+    pygame.display.flip()
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            # новая попытка
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                running = False
+                main()
+            # выход из уровня + возвращаем музыку из главного меню
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                level_exit()
+
+
+# куб разбился
+def level_completed(level_screen):
+    # останавливаем музыку и звук победы
+    sound_effect = pygame.mixer.Sound(os.path.join('assets', 'level_test', 'win.mp3'))
+    sound_effect.play()
+
+    # загрузка заднего фона
+    info_background_image = pygame.image.load(os.path.join('assets', 'gd_info.png'))
+    info_background_image = pygame.transform.scale(info_background_image, (550, 350))
+
+    # загрузка кнопки "ок"
+    ok_button_image = pygame.image.load(os.path.join('assets', 'gd_button_ok.png'))
+    ok_button_image = pygame.transform.scale(ok_button_image, (130, 60))
+
+    # отображение окна информации
+    level_screen.blit(info_background_image, (370, 200))
+    level_screen.blit(ok_button_image, (585, 450))
+
+    # отображение текста
+    font = pygame.font.Font(None, 50)
+    text1 = font.render("Вы победили!!!", True, (100, 255, 100))
     text2 = font.render("Для новой игры нажмите", True, (100, 255, 100))
     text3 = font.render("левую кнопку мыши. Для", True, (100, 255, 100))
     text4 = font.render("выхода из уровня - Esc.", True, (100, 255, 100))
