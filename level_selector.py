@@ -18,6 +18,33 @@ current_level = 1
 do_show_info = False
 
 
+# спрайт кнопки начала уровня
+class StartButton(pygame.sprite.Sprite):
+    image_1 = pygame.image.load(os.path.join('assets', 'level_selector', 'play_button_1.png'))
+    image_2 = pygame.image.load(os.path.join('assets', 'level_selector', 'play_button_2.png'))
+    image_3 = pygame.image.load(os.path.join('assets', 'level_selector', 'play_button_3.png'))
+
+    def __init__(self):
+        super().__init__(all_sprites)
+        self.image = StartButton.image_1
+        self.rect = self.image.get_rect()
+        self.rect.x = 220
+        self.rect.y = 105
+
+    def update(self, *args):
+        # стартуем уровень. пока он один - тестовый
+        if args and self.rect.collidepoint(args[0].pos):
+            sound_effect = pygame.mixer.Sound(os.path.join('assets', 'level_selector', 'play_sound.mp3'))
+            pygame.mixer_music.stop()
+            sound_effect.play()
+            pygame.time.wait(1200)
+            level_test_new.main()
+
+
+start_button = StartButton()
+start_button_dict = {1: StartButton.image_1, 2: StartButton.image_2, 3: StartButton.image_3}
+
+
 # спрайт кнопки назад
 class BackButton(pygame.sprite.Sprite):
     back_button_image = pygame.image.load(os.path.join('assets', 'gd_button_back.png'))
@@ -70,6 +97,7 @@ class LeftButton(pygame.sprite.Sprite):
         if args and self.rect.collidepoint(args[0].pos):
             global current_level
             current_level = go_to_left_dict.get(current_level)
+            start_button.image = start_button_dict.get(current_level)
 
 
 # спрайт кнопки пролистывания вправо
@@ -87,21 +115,7 @@ class RightButton(pygame.sprite.Sprite):
         if args and self.rect.collidepoint(args[0].pos):
             global current_level
             current_level = go_to_right_dict.get(current_level)
-
-# спрайт кнопки начала уровня
-class StartButton(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(all_sprites)
-        self.image = pygame.Surface((680, 250), pygame.SRCALPHA, 32)
-        pygame.draw.rect(self.image, pygame.Color('Grey'), (0, 0, 680, 250))
-        self.rect = self.image.get_rect()
-        self.rect.x = 300
-        self.rect.y = 175
-
-    def update(self, *args):
-        # стартуем уровень. пока он один - тестовый
-        if args and self.rect.collidepoint(args[0].pos):
-            level_test_new.main()
+            start_button.image = start_button_dict.get(current_level)
 
 
 # спрайт кнопки "ок"
@@ -127,7 +141,7 @@ all_sprites.add(BackButton())
 all_sprites.add(InfoButton())
 all_sprites.add(LeftButton())
 all_sprites.add(RightButton())
-all_sprites.add(StartButton())
+all_sprites.add(start_button)
 
 ok_button_group.add(OkButton())
 
@@ -138,14 +152,9 @@ def main():
     screen = pygame.display.set_mode(SCREEN_SIZE)
 
     # загрузка заднего фона
-    background_image = pygame.image.load(os.path.join('assets', 'gd_level_selector_background.png'))
-    background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
-
-    # текст
-    font = pygame.font.Font(None, 72)
-    text_level_1 = font.render('Первый уровень', 1, pygame.Color('White'))
-    text_level_2 = font.render('Второй уровень', 1, pygame.Color('White'))
-    text_level_3 = font.render('Третий уровень', 1, pygame.Color('White'))
+    background_image_1 = pygame.image.load(os.path.join('assets', 'level_selector', 'background_1.png'))
+    background_image_2 = pygame.image.load(os.path.join('assets', 'level_selector', 'background_2.png'))
+    background_image_3 = pygame.image.load(os.path.join('assets', 'level_selector', 'background_3.png'))
 
     # основной цикл
     running = True
@@ -161,20 +170,15 @@ def main():
                 menu.main()
 
         # отображение
-        screen.blit(background_image, (0, 0))
-        all_sprites.draw(screen)
-
-        # в будущем - прогресс на уровне
-        pygame.draw.rect(screen, pygame.Color('Grey'), (300, 450, 680, 50))
-
-        # отображение текущего уровня
         global current_level
         if current_level == 1:
-            screen.blit(text_level_1, (440, 225))
+            screen.blit(background_image_1, (0, 0))
         elif current_level == 2:
-            screen.blit(text_level_2, (440, 225))
+            screen.blit(background_image_2, (0, 0))
         else:
-            screen.blit(text_level_3, (440, 225))
+            screen.blit(background_image_3, (0, 0))
+
+        all_sprites.draw(screen)
 
         # отображение информации, если нужно
         global do_show_info

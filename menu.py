@@ -10,7 +10,7 @@ all_sprites = pygame.sprite.Group()
 
 # спрайт кнопки перехода к выбору уровня
 class PlayButton(pygame.sprite.Sprite):
-    play_button_image = pygame.image.load(os.path.join('assets', 'gd_menu_play_button.png'))
+    play_button_image = pygame.image.load(os.path.join('assets', 'menu', 'play_button.png'))
     play_button_image = pygame.transform.scale(play_button_image, (270, 270))
 
     def __init__(self):
@@ -38,7 +38,7 @@ def main():
     all_sprites.add(PlayButton())
 
     # загрузка заднего фона
-    background_image = pygame.image.load(os.path.join('assets', 'gd_menu_background.png'))
+    background_image = pygame.image.load(os.path.join('assets', 'menu', 'background.png'))
     background_image = pygame.transform.scale(background_image, (WIDTH, HEIGHT))
 
     # основной цикл
@@ -62,7 +62,7 @@ def main():
 if __name__ == '__main__':
     # загрузка и воспроизведение музыки
     pygame.mixer.init()
-    pygame.mixer.music.load(os.path.join('assets', 'gd_menu_music.mp3'))
+    pygame.mixer.music.load(os.path.join('assets', 'menu', 'music.mp3'))
     pygame.mixer.music.play(-1)
 
     main()

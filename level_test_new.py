@@ -13,7 +13,7 @@ screen = pygame.display.set_mode(SCREEN_SIZE)
 
 # спрайт кубика
 class Cube(pygame.sprite.Sprite):
-    cube_image = pygame.image.load(os.path.join('assets', 'gd_level_test_cube.png'))
+    cube_image = pygame.image.load(os.path.join('assets', 'level_test', 'cube.png'))
     cube_image = pygame.transform.scale(cube_image, (70, 70))
 
     def __init__(self):
@@ -51,7 +51,7 @@ class Cube(pygame.sprite.Sprite):
 
 # спрайт орба
 class Orb(pygame.sprite.Sprite):
-    orb_image = pygame.image.load(os.path.join('assets', 'gd_level_test_orb.png'))
+    orb_image = pygame.image.load(os.path.join('assets', 'level_test', 'orb.png'))
     orb_image = pygame.transform.scale(orb_image, (30, 30))
 
     def __init__(self, x=None, y=None):
@@ -78,7 +78,7 @@ class Orb(pygame.sprite.Sprite):
 
 # спрайт блока
 class Block(pygame.sprite.Sprite):
-    block_image = pygame.image.load(os.path.join('assets', 'gd_level_test_block.png'))
+    block_image = pygame.image.load(os.path.join('assets', 'level_test', 'block.png'))
     block_image = pygame.transform.scale(block_image, (70, 70))
 
     def __init__(self, x=None, y=None):
@@ -107,7 +107,7 @@ class Block(pygame.sprite.Sprite):
 
 # спрайт шипа
 class Spike(pygame.sprite.Sprite):
-    spike_image = pygame.image.load(os.path.join('assets', 'gd_level_test_spike.png'))
+    spike_image = pygame.image.load(os.path.join('assets', 'level_test', 'spike.png'))
     spike_image = pygame.transform.scale(spike_image, (70, 70))
 
     def __init__(self, x=None, y=None):
@@ -139,11 +139,11 @@ def main():
     all_sprites.add(cube)
 
     # загрузка заднего фона
-    background_image = pygame.image.load(os.path.join('assets', 'gd_level_test_background.png'))
+    background_image = pygame.image.load(os.path.join('assets', 'level_test', 'background.png'))
 
     # музыка
     pygame.mixer.init()
-    pygame.mixer.music.load(os.path.join('assets', 'gd_level_test_music.mp3'))
+    pygame.mixer.music.load(os.path.join('assets', 'level_test', 'music.mp3'))
     pygame.mixer.music.play(-1)
 
     # ограничение кадров
@@ -204,15 +204,17 @@ def main():
 
 # выход в меню выбора уровня
 def level_exit():
-    pygame.mixer.music.load(os.path.join('assets', 'gd_menu_music.mp3'))
+    pygame.mixer.music.load(os.path.join('assets', 'menu', 'music.mp3'))
     pygame.mixer.music.play(-1)
     level_selector.main()
 
 
 # куб разбился
 def cube_crashed(level_screen):
-    # останавливаем музыку
+    # останавливаем музыку и звук смерти
     pygame.mixer.music.stop()
+    sound_effect = pygame.mixer.Sound(os.path.join('assets', 'level_test', 'death_sound.mp3'))
+    sound_effect.play()
 
     # загрузка заднего фона
     info_background_image = pygame.image.load(os.path.join('assets', 'gd_info.png'))
