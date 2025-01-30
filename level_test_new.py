@@ -11,14 +11,16 @@ all_sprites = pygame.sprite.Group()
 screen = pygame.display.set_mode(SCREEN_SIZE)
 
 
-# спрайт кубика
-class Cube(pygame.sprite.Sprite):
+# спрайт игрока
+class Player(pygame.sprite.Sprite):
     cube_image = pygame.image.load(os.path.join('assets', 'level_test', 'cube.png'))
     cube_image = pygame.transform.scale(cube_image, (70, 70))
+    ship_image = pygame.image.load(os.path.join('assets', 'level_test', 'ship.png'))
+    ship_image = pygame.transform.scale(ship_image, (90, 70))
 
     def __init__(self):
         super().__init__(all_sprites)
-        self.image = Cube.cube_image
+        self.image = Player.cube_image
         self.rect = self.image.get_rect()
         self.rect.x = 200
         self.rect.y = 433
@@ -26,27 +28,42 @@ class Cube(pygame.sprite.Sprite):
         self.jump = 0
         self.jumping = False
         self.falling = False
+        self.player_mode = 'cube'
+        self.go_up = False
 
     def update(self, *event):
-        if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False:
-            self.jumping = True
-            self.jump = self.rect.y - 100
+        # физика для куба
+        if self.player_mode == 'cube':
+            if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False:
+                self.jumping = True
+                self.jump = self.rect.y - 100
 
-        # прыжок вверх
-        if self.jumping:
-            if self.rect.y == self.jump:
-                self.jumping = False
-                self.falling = True
-                self.jump = 0
-            else:
-                self.rect.y -= 4
+            # прыжок вверх
+            if self.jumping:
+                if self.rect.y == self.jump:
+                    self.jumping = False
+                    self.falling = True
+                    self.jump = 0
+                else:
+                    self.rect.y -= 4
 
-        # падение вниз
-        if self.falling:
-            if self.rect.y == 433:
-                self.falling = False
+            # падение вниз
+            if self.falling:
+                if self.rect.y == 433:
+                    self.falling = False
+                else:
+                    self.rect.y += 4
+        else:
+            # физика для кораблика
+            if pygame.mouse.get_pressed()[0]:
+                self.go_up = True
             else:
-                self.rect.y += 4
+                self.go_up = False
+
+            if self.go_up and self.rect.y >= 3:
+                self.rect.y -= 3
+            if self.go_up is False and self.rect.y <= 430:
+                self.rect.y += 3
 
 
 # спрайт орба
@@ -69,11 +86,57 @@ class Orb(pygame.sprite.Sprite):
             self.kill()
 
         # проверка на столкновение
-        if pygame.sprite.collide_mask(self, cube):
-            cube.jump = 301
-            cube.jumping = True
-            cube.falling = False
+        if pygame.sprite.collide_mask(self, player):
+            player.jump = 301
+            player.jumping = True
+            player.falling = False
             self.kill()
+
+
+# спрайты порталов
+class PortalCube(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
+        image = pygame.image.load(os.path.join('assets', 'level_test', 'portal_cube.png'))
+        self.image = pygame.transform.scale(image, (100, 200))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y - 130
+        self.mask = pygame.mask.from_surface(self.image)
+
+    def update(self, *event):
+        # перемещение
+        self.rect.x -= 5
+        if self.rect.x <= -85:
+            self.kill()
+
+        # проверка на столкновение
+        if pygame.sprite.collide_mask(self, player):
+            player.player_mode = 'cube'
+            player.image = player.cube_image
+
+
+class PortalShip(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        super().__init__(all_sprites)
+        image = pygame.image.load(os.path.join('assets', 'level_test', 'portal_ship.png'))
+        self.image = pygame.transform.scale(image, (100, 200))
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y - 130
+        self.mask = pygame.mask.from_surface(self.image)
+
+
+    def update(self, *event):
+        # перемещение
+        self.rect.x -= 5
+        if self.rect.x <= -85:
+            self.kill()
+
+        # проверка на столкновение
+        if pygame.sprite.collide_mask(self, player):
+            player.player_mode = 'ship'
+            player.image = player.ship_image
 
 
 # спрайт блока
@@ -96,11 +159,11 @@ class Block(pygame.sprite.Sprite):
             self.kill()
 
         # проверка на столкновение
-        if pygame.sprite.collide_mask(self, cube) == (65, 0):
-            cube.falling = True
-        elif pygame.sprite.collide_mask(self, cube):
-            if cube.rect.y <= 365:
-                cube.falling = False
+        if pygame.sprite.collide_mask(self, player) == (65, 0):
+            player.falling = True
+        elif pygame.sprite.collide_mask(self, player):
+            if player.rect.y <= 365:
+                player.falling = False
             else:
                 cube_crashed(screen)
 
@@ -125,18 +188,24 @@ class Spike(pygame.sprite.Sprite):
             self.kill()
 
         # проверка на столкновение
-        if pygame.sprite.collide_mask(self, cube):
+        if pygame.sprite.collide_mask(self, player):
             cube_crashed(screen)
 
 
-cube = Cube()
+player = Player()
 
 
 def main():
     pygame.init()
     pygame.display.set_caption('Geometry Dash Clone')
+
     all_sprites = pygame.sprite.Group()
-    all_sprites.add(cube)
+    player.player_mode = 'cube'
+    player.image = player.cube_image
+    player.rect.y = 433
+    player.jumping = False
+    player.falling = False
+    all_sprites.add(player)
 
     # загрузка заднего фона
     background_image = pygame.image.load(os.path.join('assets', 'level_test', 'background.png'))
@@ -155,7 +224,7 @@ def main():
 
     x = 1280
     y = 433
-    level_dict = {'E': None, 'B': Block, 'S': Spike, 'O': Orb}
+    level_dict = {'E': None, 'B': Block, 'S': Spike, 'O': Orb, 'P': PortalCube, 'p': PortalShip}
     flag = False
     height = 1
 
@@ -172,12 +241,12 @@ def main():
             object = level_dict.get(symbol)
             if object:
                 all_sprites.add(object(x, y))
-                if flag:
-                    y += 70
-                    height -= 1
-                    if height == 1:
-                        flag = False
-                    continue
+            if flag:
+                y += 70
+                height -= 1
+                if height == 1:
+                    flag = False
+                continue
             x += 70
             y = 433
 
