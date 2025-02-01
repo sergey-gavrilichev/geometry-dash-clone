@@ -30,13 +30,18 @@ class Player(pygame.sprite.Sprite):
         self.falling = False
         self.player_mode = 'cube'
         self.go_up = False
+        self.on_block = False
 
     def update(self, *event):
         # физика для куба
         if self.player_mode == 'cube':
-            if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False:
+            if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False and self.jumping is False:
                 self.jumping = True
-                self.jump = self.rect.y - 100
+                self.jump = self.rect.y - 124
+
+            # если не на блоке - падаем
+            if not self.on_block and not self.jumping:
+                self.falling = True
 
             # прыжок вверх
             if self.jumping:
@@ -49,10 +54,14 @@ class Player(pygame.sprite.Sprite):
 
             # падение вниз
             if self.falling:
-                if self.rect.y == 433:
+                if self.rect.y >= 433:
                     self.falling = False
                 else:
                     self.rect.y += 4
+
+            # сбрасываем переменную стояния на блоке
+            self.on_block = False
+
         else:
             # физика для кораблика
             if pygame.mouse.get_pressed()[0]:
@@ -60,10 +69,10 @@ class Player(pygame.sprite.Sprite):
             else:
                 self.go_up = False
 
-            if self.go_up and self.rect.y >= 3:
-                self.rect.y -= 3
-            if self.go_up is False and self.rect.y <= 430:
-                self.rect.y += 3
+            if self.go_up and self.rect.y >= 4:
+                self.rect.y -= 4
+            if self.go_up is False and self.rect.y <= 429:
+                self.rect.y += 4
 
 
 # спрайт орба
@@ -159,12 +168,21 @@ class Block(pygame.sprite.Sprite):
             self.kill()
 
         # проверка на столкновение
-        if pygame.sprite.collide_mask(self, player) == (65, 0):
-            player.falling = True
-        elif pygame.sprite.collide_mask(self, player):
-            if player.rect.y <= 365:
-                player.falling = False
-            else:
+        if pygame.sprite.collide_mask(self, player):
+            side = check_collision_side(player, self)
+            if side == 'top':
+                if player.player_mode == 'cube':
+                    player.jumping = False
+                    player.falling = False
+                    player.on_block = True
+                else:
+                    player.rect.y -= 4
+            if side == 'bottom':
+                if player.player_mode == 'cube':
+                    cube_crashed(screen)
+                else:
+                    player.rect.y += 4
+            if side == 'horizontal':
                 cube_crashed(screen)
 
 
@@ -193,6 +211,24 @@ class Spike(pygame.sprite.Sprite):
 
 
 player = Player()
+
+
+def check_collision_side(player, block):
+    # Определяет сторону столкновения player с block
+    dx = (player.rect.centerx - block.rect.centerx)
+    dy = (player.rect.centery - block.rect.centery)
+
+    # Найдём размеры пересечения
+    intersection = player.rect.clip(block.rect)
+    if intersection.width > intersection.height:
+        # Вертикальное столкновение
+        if dy < 0:
+            return "top"
+        else:
+            return "bottom"
+    else:
+        # Горизонтальное столкновение
+        return "horizontal"
 
 
 def main():
