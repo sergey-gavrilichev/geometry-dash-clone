@@ -1,17 +1,21 @@
 import os
 import sys
 import pygame
+import random
 import level_selector
 
 
 from menu import SCREEN_SIZE
 
+# Инициализация Pygame
+pygame.init()
 
+# Основные переменные
 all_sprites = pygame.sprite.Group()
 screen = pygame.display.set_mode(SCREEN_SIZE)
+alpha_surf = pygame.Surface(SCREEN_SIZE, pygame.SRCALPHA)
 
-
-# спрайт игрока
+# Спрайт игрока
 class Player(pygame.sprite.Sprite):
     cube_image = pygame.image.load(os.path.join('assets', 'level_test', 'cube.png'))
     cube_image = pygame.transform.scale(cube_image, (70, 70))
@@ -21,6 +25,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(all_sprites)
         self.image = Player.cube_image
+        self.original_image = self.image  # Сохраняем оригинальное изображение
         self.rect = self.image.get_rect()
         self.rect.x = 200
         self.rect.y = 433
@@ -31,8 +36,13 @@ class Player(pygame.sprite.Sprite):
         self.player_mode = 'cube'
         self.go_up = False
         self.on_block = False
+        self.particles = []
+        self.rotation = 0  # Угол поворота
 
     def update(self, *event):
+        # Очистка alpha_surf
+        alpha_surf.fill((0, 0, 0, 0))
+        
         # физика для куба
         if self.player_mode == 'cube':
             if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False and self.jumping is False:
@@ -46,6 +56,7 @@ class Player(pygame.sprite.Sprite):
             # прыжок вверх
             if self.jumping:
                 if self.rect.y == self.jump:
+                    self.rotation -= 90  # Плавный поворот
                     self.jumping = False
                     self.falling = True
                     self.jump = 0
@@ -74,6 +85,29 @@ class Player(pygame.sprite.Sprite):
             if self.go_up is False and self.rect.y <= 429:
                 self.rect.y += 4
 
+        # Применение поворота к изображению
+        self.image = pygame.transform.rotate(self.original_image, self.rotation % 360)
+        self.rect = self.image.get_rect(center=self.rect.center)
+
+        self.draw_particle_trail(self.rect.x, self.rect.y)
+    
+    def draw_particle_trail(self, x, y, color=(255, 255, 255)):
+        """Рисует след частиц за игроком"""
+        
+        self.particles.append(
+                [[x + self.rect.width / 2, y + self.rect.height], 
+                [random.randint(0, 25) / 10 - 1, random.choice([0, 0])],
+                random.randint(5, 8)])
+
+        for particle in self.particles:
+            particle[0][0] += particle[1][0]
+            particle[0][1] += particle[1][1]
+            particle[2] -= 0.5
+            particle[1][0] -= 0.4
+            pygame.draw.rect(alpha_surf, color,
+                ([int(particle[0][0]), int(particle[0][1])], [int(particle[2]), int(particle[2])]))
+            if particle[2] <= 0:
+                self.particles.remove(particle)
 
 # спрайт орба
 class Orb(pygame.sprite.Sprite):
@@ -123,7 +157,8 @@ class PortalCube(pygame.sprite.Sprite):
         if pygame.sprite.collide_mask(self, player):
             player.player_mode = 'cube'
             player.image = player.cube_image
-
+            player.original_image = player.cube_image  # Обновляем оригинальное изображение
+            player.rotation = 0  # Сброс угла поворота
 
 class PortalShip(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -146,7 +181,8 @@ class PortalShip(pygame.sprite.Sprite):
         if pygame.sprite.collide_mask(self, player):
             player.player_mode = 'ship'
             player.image = player.ship_image
-
+            player.original_image = player.ship_image  # Обновляем оригинальное изображение
+            player.rotation = 0  # Сброс угла поворота
 
 # спрайт блока
 class Block(pygame.sprite.Sprite):
@@ -298,9 +334,15 @@ def main():
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 level_exit()
 
-        # отрисовка
+        # Очистка экрана и alpha_surf
         screen.blit(background_image, (0, 0))
+        alpha_surf.fill((0, 0, 0, 0))
+        
+        # отрисовка
         all_sprites.draw(screen)
+        
+        # Отображение alpha_surf на экране после всех отрисовок
+        screen.blit(alpha_surf, (0, 0))
         pygame.display.flip()
 
         # обновление спрайтов
