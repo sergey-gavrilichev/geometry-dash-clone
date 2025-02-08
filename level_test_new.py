@@ -15,6 +15,7 @@ all_sprites = pygame.sprite.Group()
 screen = pygame.display.set_mode(SCREEN_SIZE)
 alpha_surf = pygame.Surface(SCREEN_SIZE, pygame.SRCALPHA)
 
+
 # Спрайт игрока
 class Player(pygame.sprite.Sprite):
     cube_image = pygame.image.load(os.path.join('assets', 'level_test', 'cube.png'))
@@ -45,6 +46,7 @@ class Player(pygame.sprite.Sprite):
         
         # физика для куба
         if self.player_mode == 'cube':
+            self.original_image = Player.cube_image
             if event and event[0].type == pygame.MOUSEBUTTONDOWN and self.falling is False and self.jumping is False:
                 self.jumping = True
                 self.jump = self.rect.y - 124
@@ -74,6 +76,7 @@ class Player(pygame.sprite.Sprite):
             self.on_block = False
 
         else:
+            self.original_image = Player.ship_image
             # физика для кораблика
             if pygame.mouse.get_pressed()[0]:
                 self.go_up = True
@@ -94,10 +97,9 @@ class Player(pygame.sprite.Sprite):
     def draw_particle_trail(self, x, y, color=(255, 255, 255)):
         """Рисует след частиц за игроком"""
         
-        self.particles.append(
-                [[x + self.rect.width / 2, y + self.rect.height], 
-                [random.randint(0, 25) / 10 - 1, random.choice([0, 0])],
-                random.randint(5, 8)])
+        self.particles.append([[x + self.rect.width / 2, y + self.rect.height],
+                               [random.randint(0, 25) / 10 - 1, random.choice([0, 0])],
+                               random.randint(5, 8)])
 
         for particle in self.particles:
             particle[0][0] += particle[1][0]
@@ -105,16 +107,17 @@ class Player(pygame.sprite.Sprite):
             particle[2] -= 0.5
             particle[1][0] -= 0.4
             pygame.draw.rect(alpha_surf, color,
-                ([int(particle[0][0]), int(particle[0][1])], [int(particle[2]), int(particle[2])]))
+                             ([int(particle[0][0]), int(particle[0][1])], [int(particle[2]), int(particle[2])]))
             if particle[2] <= 0:
                 self.particles.remove(particle)
+
 
 # спрайт орба
 class Orb(pygame.sprite.Sprite):
     orb_image = pygame.image.load(os.path.join('assets', 'level_test', 'orb.png'))
     orb_image = pygame.transform.scale(orb_image, (30, 30))
 
-    def __init__(self, x=None, y=None):
+    def __init__(self, file, x=None, y=None):
         super().__init__(all_sprites)
         self.image = Orb.orb_image
         self.rect = self.image.get_rect()
@@ -138,7 +141,7 @@ class Orb(pygame.sprite.Sprite):
 
 # спрайты порталов
 class PortalCube(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, file, x, y):
         super().__init__(all_sprites)
         image = pygame.image.load(os.path.join('assets', 'level_test', 'portal_cube.png'))
         self.image = pygame.transform.scale(image, (100, 200))
@@ -157,11 +160,11 @@ class PortalCube(pygame.sprite.Sprite):
         if pygame.sprite.collide_mask(self, player):
             player.player_mode = 'cube'
             player.image = player.cube_image
-            player.original_image = player.cube_image  # Обновляем оригинальное изображение
             player.rotation = 0  # Сброс угла поворота
 
+
 class PortalShip(pygame.sprite.Sprite):
-    def __init__(self, x, y):
+    def __init__(self, file, x, y):
         super().__init__(all_sprites)
         image = pygame.image.load(os.path.join('assets', 'level_test', 'portal_ship.png'))
         self.image = pygame.transform.scale(image, (100, 200))
@@ -169,7 +172,6 @@ class PortalShip(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y - 130
         self.mask = pygame.mask.from_surface(self.image)
-
 
     def update(self, *event):
         # перемещение
@@ -181,21 +183,22 @@ class PortalShip(pygame.sprite.Sprite):
         if pygame.sprite.collide_mask(self, player):
             player.player_mode = 'ship'
             player.image = player.ship_image
-            player.original_image = player.ship_image  # Обновляем оригинальное изображение
             player.rotation = 0  # Сброс угла поворота
+
 
 # спрайт блока
 class Block(pygame.sprite.Sprite):
     block_image = pygame.image.load(os.path.join('assets', 'level_test', 'block.png'))
     block_image = pygame.transform.scale(block_image, (70, 70))
 
-    def __init__(self, x=None, y=None):
+    def __init__(self, file,  x=None, y=None):
         super().__init__(all_sprites)
         self.image = Block.block_image
         self.rect = self.image.get_rect()
         self.rect.x = x or 1280
         self.rect.y = y or 433
         self.mask = pygame.mask.from_surface(self.image)
+        self.file = file  # запонимает файл с цветом фона
 
     def update(self, *event):
         # перемещение
@@ -215,11 +218,11 @@ class Block(pygame.sprite.Sprite):
                     player.rect.y -= 4
             if side == 'bottom':
                 if player.player_mode == 'cube':
-                    cube_crashed(screen)
+                    cube_crashed(screen, self.file)
                 else:
                     player.rect.y += 4
             if side == 'horizontal':
-                cube_crashed(screen)
+                cube_crashed(screen, self.file)
 
 
 # спрайт шипа
@@ -227,13 +230,14 @@ class Spike(pygame.sprite.Sprite):
     spike_image = pygame.image.load(os.path.join('assets', 'level_test', 'spike.png'))
     spike_image = pygame.transform.scale(spike_image, (70, 70))
 
-    def __init__(self, x=None, y=None):
+    def __init__(self, file, x=None, y=None):
         super().__init__(all_sprites)
         self.image = Spike.spike_image
         self.rect = self.image.get_rect()
         self.rect.x = x or 1280
         self.rect.y = y or 433
         self.mask = pygame.mask.from_surface(self.image)
+        self.file = file  # запонимает файл с цветом фона
 
     def update(self, *event):
         # перемещение
@@ -243,7 +247,20 @@ class Spike(pygame.sprite.Sprite):
 
         # проверка на столкновение
         if pygame.sprite.collide_mask(self, player):
-            cube_crashed(screen)
+            cube_crashed(screen, self.file)
+
+
+# перевёрнутый шип(для верха)
+class ReverseSpike(Spike):
+    reverse_spike_image = pygame.image.load(os.path.join('assets', 'level_test', 'reverse_spike.png'))
+    reverse_spike_image = pygame.transform.scale(reverse_spike_image, (70, 70))
+
+    def __init__(self, file, x=None, y=None):
+        super().__init__(all_sprites)
+        self.image = ReverseSpike.reverse_spike_image
+        self.rect.x = x or 1280
+        self.rect.y = y or 433
+        self.file = file
 
 
 player = Player()
@@ -267,7 +284,7 @@ def check_collision_side(player, block):
         return "horizontal"
 
 
-def main():
+def main(file):
     pygame.init()
     pygame.display.set_caption('Geometry Dash Clone')
 
@@ -280,7 +297,7 @@ def main():
     all_sprites.add(player)
 
     # загрузка заднего фона
-    background_image = pygame.image.load(os.path.join('assets', 'level_test', 'background.png'))
+    background_image = pygame.image.load(os.path.join('assets', 'level_test', file))
 
     # музыка
     pygame.mixer.init()
@@ -291,12 +308,12 @@ def main():
     clock = pygame.time.Clock()
 
     # генерация уровня
-    with open('level_test.txt', mode='r', encoding='utf8') as readed_file:
+    with open(os.path.join('levels', 'level_test.txt'), mode='r', encoding='utf8') as readed_file:
         text = readed_file.read().split()[-1]
 
     x = 1280
     y = 433
-    level_dict = {'E': None, 'B': Block, 'S': Spike, 'O': Orb, 'P': PortalCube, 'p': PortalShip}
+    level_dict = {'E': None, 'B': Block, 'S': Spike, 'O': Orb, 'P': PortalCube, 'p': PortalShip, 'R': ReverseSpike}
     flag = False
     height = 1
 
@@ -312,7 +329,7 @@ def main():
             # иначе, спавним объект
             object = level_dict.get(symbol)
             if object:
-                all_sprites.add(object(x, y))
+                all_sprites.add(object(file, x, y))
             if flag:
                 y += 70
                 height -= 1
@@ -353,7 +370,7 @@ def main():
 
         # если остался только куб - то уровень закончился и это победа
         if len(all_sprites) == 1:
-            level_completed(screen)
+            level_completed(screen, file)
 
 
 # выход в меню выбора уровня
@@ -364,7 +381,7 @@ def level_exit():
 
 
 # куб разбился
-def cube_crashed(level_screen):
+def cube_crashed(level_screen, file):
     # останавливаем музыку и звук смерти
     pygame.mixer.music.stop()
     sound_effect = pygame.mixer.Sound(os.path.join('assets', 'level_test', 'death_sound.mp3'))
@@ -405,14 +422,14 @@ def cube_crashed(level_screen):
             # новая попытка
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 running = False
-                main()
+                main(file)
             # выход из уровня + возвращаем музыку из главного меню
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 level_exit()
 
 
 # куб разбился
-def level_completed(level_screen):
+def level_completed(level_screen, file):
     # останавливаем музыку и звук победы
     sound_effect = pygame.mixer.Sound(os.path.join('assets', 'level_test', 'win.mp3'))
     sound_effect.play()
@@ -452,7 +469,7 @@ def level_completed(level_screen):
             # новая попытка
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 running = False
-                main()
+                main(file)
             # выход из уровня + возвращаем музыку из главного меню
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 level_exit()

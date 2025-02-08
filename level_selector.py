@@ -38,7 +38,14 @@ class StartButton(pygame.sprite.Sprite):
             pygame.mixer_music.stop()
             sound_effect.play()
             pygame.time.wait(1200)
-            level_test_new.main()
+            global current_level
+            if current_level == 1:
+                file = 'background_blue.jpg'
+            elif current_level == 2:
+                file = 'background_green.jpg'
+            else:
+                file = 'background_red.jpg'
+            level_test_new.main(file)
 
 
 start_button = StartButton()
@@ -161,7 +168,6 @@ def main():
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
                 sys.exit()
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 all_sprites.update(event, screen)
