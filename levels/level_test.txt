@@ -1,0 +1,4 @@
+### это пробный вариант записи уровня в текстовый документ
+### E = empty = ничего; B = Block = блок; S = spike = шип; R = reverse spike = перевёрнутый треугольник: O = Orb = орб; P = Portal = портал куба; p = portal = портал кораблика
+### если необходимо разместить объект повыше - то поставьте число, которое будет означать количество объектов на одной x координате, а потом перечислите эти объекты сверху вниз
+BBBBB2BB2BB2BB2BBEEEEEEEEEEpEEEEEEEE8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESB8BREEEESBEEEEEEEE8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEEEBB8BBEEPBBBEEEEEEEESEEEEEEESEEEEEEE
