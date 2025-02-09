@@ -3,7 +3,7 @@ import sys
 import pygame
 import menu
 import info
-import level_test_new
+import level
 
 
 from menu import SCREEN_SIZE, WIDTH, HEIGHT
@@ -32,7 +32,7 @@ class StartButton(pygame.sprite.Sprite):
         self.rect.y = 105
 
     def update(self, *args):
-        # стартуем уровень. пока он один - тестовый
+        # стартуем уровень
         if args and self.rect.collidepoint(args[0].pos):
             sound_effect = pygame.mixer.Sound(os.path.join('assets', 'level_selector', 'play_sound.mp3'))
             pygame.mixer_music.stop()
@@ -41,11 +41,14 @@ class StartButton(pygame.sprite.Sprite):
             global current_level
             if current_level == 1:
                 file = 'background_blue.jpg'
+                cur_level = 'level_1.txt'
             elif current_level == 2:
                 file = 'background_green.jpg'
+                cur_level = 'level_2.txt'
             else:
                 file = 'background_red.jpg'
-            level_test_new.main(file)
+                cur_level = 'level_3.txt'
+            level.main(file, cur_level)
 
 
 start_button = StartButton()
