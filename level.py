@@ -134,7 +134,7 @@ class Orb(pygame.sprite.Sprite):
 
         # проверка на столкновение
         if pygame.sprite.collide_mask(self, player):
-            player.jump = 301
+            player.jump = player.rect.y - 124
             player.jumping = True
             player.falling = False
             self.kill()
