@@ -15,6 +15,7 @@ all_sprites = pygame.sprite.Group()
 screen = pygame.display.set_mode(SCREEN_SIZE)
 alpha_surf = pygame.Surface(SCREEN_SIZE, pygame.SRCALPHA)
 cur_level = None
+progress = 0
 
 
 # Спрайт игрока
@@ -350,6 +351,13 @@ def main(file, curr_level):
             x += 70
             y = 433
 
+    # считаем длину уронвя в секундах
+    last_x = x
+    level_len = last_x // 5 // 60
+
+    # засекаем время начала
+    start_time = pygame.time.get_ticks()
+
     # основной цикл
     running = True
     while running:
@@ -368,7 +376,7 @@ def main(file, curr_level):
         
         # отрисовка
         all_sprites.draw(screen)
-        
+
         # Отображение alpha_surf на экране после всех отрисовок
         screen.blit(alpha_surf, (0, 0))
         pygame.display.flip()
@@ -378,6 +386,13 @@ def main(file, curr_level):
 
         # ограничение кадров
         clock.tick(60)
+
+        # считаем прогресс
+        global progress
+        end_time = pygame.time.get_ticks()
+        progress_in_sec = (end_time - start_time) / 1000
+        progress_in_procent = progress_in_sec / level_len * 100
+        progress = round(progress_in_procent)
 
         # если остался только куб - то уровень закончился и это победа
         if len(all_sprites) == 1:
@@ -411,18 +426,30 @@ def cube_crashed(level_screen, file):
     level_screen.blit(ok_button_image, (585, 450))
 
     # отображение текста
+    global progress
     font = pygame.font.Font(None, 50)
-    text1 = font.render("Вы разбились.", True, (100, 255, 100))
+    text1 = font.render(f"Вы разбились на {progress} %", True, (100, 255, 100))
     text2 = font.render("Для новой игры нажмите", True, (100, 255, 100))
     text3 = font.render("левую кнопку мыши. Для", True, (100, 255, 100))
     text4 = font.render("выхода из уровня - Esc.", True, (100, 255, 100))
     text5 = font.render("Удачи!", True, (100, 255, 100))
-    level_screen.blit(text1, (530, 230))
+    level_screen.blit(text1, (470, 230))
     level_screen.blit(text2, (420, 270))
     level_screen.blit(text3, (420, 310))
     level_screen.blit(text4, (420, 350))
     level_screen.blit(text5, (585, 390))
     pygame.display.flip()
+
+    # сохранение прогресса игрока
+    global cur_level
+    level_to_num = {'level_1.txt': 0, 'level_2.txt': 1, 'level_3.txt': 2}
+    with open(os.path.join('levels', 'progress.txt'), mode='r', encoding='utf8') as readed:
+        progresses = readed.read().split()
+    old_progress = progresses[level_to_num.get(cur_level)]
+    if progress > int(old_progress):
+        progresses[level_to_num.get(cur_level)] = progress
+        with open(os.path.join('levels', 'progress.txt'), mode='w', encoding='utf8') as out:
+            out.write('\n'.join(str(num) for num in progresses))
 
     running = True
     while running:
@@ -433,7 +460,6 @@ def cube_crashed(level_screen, file):
             # новая попытка
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 running = False
-                global cur_level
                 main(file, cur_level)
             # выход из уровня + возвращаем музыку из главного меню
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:

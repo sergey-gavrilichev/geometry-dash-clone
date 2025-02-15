@@ -189,6 +189,14 @@ def main():
 
         all_sprites.draw(screen)
 
+        # отображение прогресса на текущем уровне
+        font = pygame.font.Font(None, 38)
+        with open(os.path.join('levels', 'progress.txt'), mode='r', encoding='utf8') as readed:
+            progresses = readed.read().split()
+            progress = progresses[current_level - 1]
+        progress_text = font.render(f'{progress}%', 1, pygame.Color('white'))
+        screen.blit(progress_text, (600, 448))
+
         # отображение информации, если нужно
         global do_show_info
         if do_show_info:
