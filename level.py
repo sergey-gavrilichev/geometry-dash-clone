@@ -498,6 +498,15 @@ def level_completed(level_screen, file):
     level_screen.blit(text5, (585, 390))
     pygame.display.flip()
 
+    # сохранение прогресса игрока
+    global cur_level
+    level_to_num = {'level_1.txt': 0, 'level_2.txt': 1, 'level_3.txt': 2}
+    with open(os.path.join('levels', 'progress.txt'), mode='r', encoding='utf8') as readed:
+        progresses = readed.read().split()
+    progresses[level_to_num.get(cur_level)] = 100
+    with open(os.path.join('levels', 'progress.txt'), mode='w', encoding='utf8') as out:
+        out.write('\n'.join(str(num) for num in progresses))
+
     running = True
     while running:
         for event in pygame.event.get():
@@ -507,7 +516,6 @@ def level_completed(level_screen, file):
             # новая попытка
             elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 running = False
-                global cur_level
                 main(file, cur_level)
             # выход из уровня + возвращаем музыку из главного меню
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
