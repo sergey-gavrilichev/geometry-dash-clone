@@ -265,6 +265,30 @@ class ReverseSpike(Spike):
         self.file = file
 
 
+def show_pause_screen():
+    # загрузка изображения паузы
+    pause_image = pygame.image.load(os.path.join('assets', 'gd_info.png'))
+    pause_image = pygame.transform.scale(pause_image, (550, 350))
+    
+    # отображение изображения паузы
+    screen.blit(pause_image, (SCREEN_SIZE[0] // 2 - pause_image.get_width() // 2, SCREEN_SIZE[1] // 2 - pause_image.get_height() // 2))
+    
+    # отображение текста
+    font_large = pygame.font.Font(None, 70)  
+    font_medium = pygame.font.Font(None, 50) 
+    texts = [
+        (font_large.render("Пауза", True, (100, 255, 100)), -140),
+        (font_medium.render("Чтобы продолжить ", True, (100, 255, 100)), -60),
+        (font_medium.render("нажмите - Пробел.", True, (100, 255, 100)), 0),
+        (font_medium.render("Для выхода - Esc.", True, (100, 255, 100)), 60)
+    ]
+    
+    for text, offset in texts:
+        screen.blit(text, (SCREEN_SIZE[0] // 2 - text.get_width() // 2, SCREEN_SIZE[1] // 2 - text.get_height() // 2 + offset))
+    
+    pygame.display.flip()
+
+
 player = Player()
 
 
@@ -325,7 +349,15 @@ def main(file, curr_level):
 
     x = 1280
     y = 433
-    level_dict = {'E': None, 'B': Block, 'S': Spike, 'O': Orb, 'P': PortalCube, 'p': PortalShip, 'R': ReverseSpike}
+    level_dict = {
+        "E": None,
+        "B": Block,
+        "S": Spike,
+        "O": Orb,
+        "P": PortalCube,
+        "p": PortalShip,
+        "R": ReverseSpike,
+    }
     flag = False
     height = 1
 
@@ -360,43 +392,53 @@ def main(file, curr_level):
 
     # основной цикл
     running = True
+    paused = False
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and not paused:
                 all_sprites.update(event)
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                level_exit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    level_exit()
+                elif event.key == pygame.K_SPACE:
+                    paused = not paused
+                    if paused:
+                        pygame.mixer.music.pause()
+                        show_pause_screen()
+                    else:
+                        pygame.mixer.music.unpause()
 
-        # Очистка экрана и alpha_surf
-        screen.blit(background_image, (0, 0))
-        alpha_surf.fill((0, 0, 0, 0))
-        
-        # отрисовка
-        all_sprites.draw(screen)
+        if not paused:
+            # Очистка экрана и alpha_surf
+            screen.blit(background_image, (0, 0))
+            alpha_surf.fill((0, 0, 0, 0))
 
-        # Отображение alpha_surf на экране после всех отрисовок
-        screen.blit(alpha_surf, (0, 0))
-        pygame.display.flip()
+            # отрисовка
+            all_sprites.draw(screen)
 
-        # обновление спрайтов
-        all_sprites.update()
+            # Отображение alpha_surf на экране после всех отрисовок
+            screen.blit(alpha_surf, (0, 0))
+            pygame.display.flip()
 
-        # ограничение кадров
-        clock.tick(60)
+            # обновление спрайтов
+            all_sprites.update()
 
-        # считаем прогресс
-        global progress
-        end_time = pygame.time.get_ticks()
-        progress_in_sec = (end_time - start_time) / 1000
-        progress_in_procent = progress_in_sec / level_len * 100
-        progress = round(progress_in_procent)
+            # ограничение кадров
+            clock.tick(60)
 
-        # если остался только куб - то уровень закончился и это победа
-        if len(all_sprites) == 1:
-            level_completed(screen, file)
+            # считаем прогресс
+            global progress
+            end_time = pygame.time.get_ticks()
+            progress_in_sec = (end_time - start_time) / 1000
+            progress_in_procent = progress_in_sec / level_len * 100
+            progress = round(progress_in_procent)
+
+            # если остался только куб - то уровень закончился и это победа
+            if len(all_sprites) == 1:
+                level_completed(screen, file)
 
 
 # выход в меню выбора уровня
